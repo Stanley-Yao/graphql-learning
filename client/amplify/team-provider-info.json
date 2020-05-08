@@ -1,0 +1,15 @@
+{
+    "staging": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-stanley-goal-project-staging-150856-authRole",
+            "UnauthRoleArn": "arn:aws:iam::979032100230:role/amplify-stanley-goal-project-staging-150856-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::979032100230:role/amplify-stanley-goal-project-staging-150856-authRole",
+            "Region": "us-west-2",
+            "DeploymentBucketName": "amplify-stanley-goal-project-staging-150856-deployment",
+            "UnauthRoleName": "amplify-stanley-goal-project-staging-150856-unauthRole",
+            "StackName": "amplify-stanley-goal-project-staging-150856",
+            "StackId": "arn:aws:cloudformation:us-west-2:979032100230:stack/amplify-stanley-goal-project-staging-150856/4f470220-8d82-11ea-a89e-06bedd0f3972",
+            "AmplifyAppId": "d2tivt5bowua4w"
+        }
+    }
+}
