@@ -10,6 +10,11 @@
             "StackName": "amplify-stanley-goal-project-staging-150856",
             "StackId": "arn:aws:cloudformation:us-west-2:979032100230:stack/amplify-stanley-goal-project-staging-150856/4f470220-8d82-11ea-a89e-06bedd0f3972",
             "AmplifyAppId": "d2tivt5bowua4w"
+        },
+        "categories": {
+            "auth": {
+                "stanleygoalproject3c75016f": {}
+            }
         }
     }
 }
