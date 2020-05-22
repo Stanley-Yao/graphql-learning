@@ -13,14 +13,11 @@ import {
 	onCreateComment,
 	onCreateLike,
 } from "../graphql/subscriptions";
-import { Observable } from "rxjs";
 import CreateCommentPost from "./CreateCommentPost";
 import CommentPost from "./CommentPost";
-import { List } from "antd/lib/form/Form";
 import { FaThumbsUp } from "react-icons/fa";
 import { message, Tooltip, Popover, Typography } from "antd";
 import classnames from "classnames";
-import Title from "antd/lib/skeleton/Title";
 
 interface IProps {}
 const { useEffect, useState } = React;
@@ -30,7 +27,6 @@ const DisplayPosts = (props: IProps) => {
 	const [postLikedBy, setPostLikedBy] = useState([] as any);
 	const [error, setError] = useState("");
 	const [hovering, setHovering] = useState(false);
-	const [popoverId, setPopoverId] = useState("");
 
 	const ownerId = sessionStorage.getItem("userId");
 	const username = sessionStorage.getItem("username");
