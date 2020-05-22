@@ -1,7 +1,7 @@
 import * as React from "react";
-import { listPosts } from "../graphql/queries";
+import { listPosts, listComments } from "../graphql/queries";
 import { API, graphqlOperation, APIClass } from "aws-amplify";
-import { Post } from "../Modals";
+import { Post, Comment } from "../Modals";
 import { deletePost } from "../graphql/mutations";
 import DeletePost from "./DeletePost";
 import EditPost from "./EditPost";
@@ -10,22 +10,26 @@ import {
 	onCreatePost,
 	onDeletePost,
 	onUpdatePost,
+	onCreateComment,
 } from "../graphql/subscriptions";
 import { Observable } from "rxjs";
+import CreateCommentPost from "./CreateCommentPost";
+import CommentPost from "./CommentPost";
+import { List } from "antd/lib/form/Form";
 
 interface IProps {}
 const { useEffect, useState } = React;
 
 const DisplayPosts = (props: IProps) => {
-	const [posts, setPosts] = useState([] as any);
+	const [posts, setPosts] = useState([] as Post[]);
 	useEffect(() => {
-		console.log(console.log("DisplayPosts -> posts", posts));
 		getPost().then((res: any) => {
 			setPosts(res.data.listPosts.items);
 		});
 		onCreatedPost();
 		onDeletePostFunc();
 		onEditPostFunc();
+		createPostComment();
 	}, []);
 
 	useEffect(() => {});
@@ -35,6 +39,7 @@ const DisplayPosts = (props: IProps) => {
 			onCreatedPost(false);
 			onDeletePostFunc(false);
 			onEditPostFunc(false);
+			createPostComment(false);
 		};
 	}, []);
 
@@ -51,7 +56,8 @@ const DisplayPosts = (props: IProps) => {
 				},
 			});
 		} else {
-			createPostListener.unsubscribe();
+			if (typeof createPostListener === "function")
+				createPostListener.unsubscribe();
 		}
 	};
 
@@ -68,7 +74,8 @@ const DisplayPosts = (props: IProps) => {
 				},
 			});
 		} else {
-			deletePostListener.unsubscribe();
+			if (typeof deletePostListener === "function")
+				deletePostListener.unsubscribe();
 		}
 	};
 
@@ -85,12 +92,37 @@ const DisplayPosts = (props: IProps) => {
 				},
 			});
 		} else {
-			editPostListener.unsubscribe();
+			if (typeof editPostListener === "function")
+				editPostListener.unsubscribe();
+		}
+	};
+
+	const createPostComment = async (subscrible = true) => {
+		const createCommentListener: any = await API.graphql(
+			graphqlOperation(onCreateComment)
+		);
+		if (subscrible) {
+			createCommentListener.subscribe({
+				next: (postData: any) => {
+					getComments().then((res: any) => {
+						getPost().then((res: any) => {
+							setPosts(res.data.listPosts.items);
+						});
+					});
+				},
+			});
+		} else {
+			if (typeof createCommentListener === "function")
+				createCommentListener.unsubscribe();
 		}
 	};
 
 	const getPost = async () => {
 		return await API.graphql(graphqlOperation(listPosts));
+	};
+
+	const getComments = async () => {
+		return await API.graphql(graphqlOperation(listComments));
 	};
 
 	return (
@@ -107,6 +139,27 @@ const DisplayPosts = (props: IProps) => {
 					<span>
 						<DeletePost post={p} />
 						<EditPost postData={p} id={p.id} />
+					</span>
+
+					{p.comments.items.length > 0 && (
+						<span>
+							Comments:
+							{p.comments.items.map((c: any, i: number) => {
+								return (
+									<CommentPost
+										key={i}
+										comment={c.content}
+										createdAt={c.createdAt}
+										commentOwnerUsername={
+											c.commentOwnerUsername
+										}
+									/>
+								);
+							})}
+						</span>
+					)}
+					<span>
+						<CreateCommentPost postId={p.id} />
 					</span>
 				</div>
 			))}

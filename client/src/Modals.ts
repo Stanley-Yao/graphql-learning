@@ -5,7 +5,7 @@ export type Post = {
 	postTitle: String;
 	postBody: String;
 	createdAt?: String;
-	comments?: Comment[];
+	comments?: any[];
 	likes?: Like;
 };
 
@@ -13,7 +13,7 @@ export type Comment = {
 	id?: String;
 	commentOwnerId?: String;
 	commentOwnerUsername?: String;
-	post?: Post;
+	postId?: string;
 	content?: String;
 	createdAt?: String;
 };

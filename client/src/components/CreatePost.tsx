@@ -4,7 +4,7 @@ import { API, graphqlOperation, Auth } from "aws-amplify";
 import { createPost } from "../graphql/mutations";
 import { Button, Form, Input } from "antd";
 import TextArea from "antd/lib/input/TextArea";
-
+import { AuthContext } from "./Context";
 interface IProps {
 	callback?: Function;
 }
@@ -16,7 +16,7 @@ const initPost = {
 	postOwnerUsername: "",
 	postTitle: "",
 	postBody: "",
-} as any;
+} as Post;
 
 const layout = {
 	labelCol: { span: 8 },
@@ -36,11 +36,17 @@ export default function CreatePost({ callback }: IProps) {
 	//auth
 	const auth = async () => {
 		await Auth.currentUserInfo().then((user) => {
-			setPost({
-				...post,
+			const authData = {
 				postOwnerId: user.attributes.sub,
 				postOwnerUsername: user.username,
+			};
+			setPost({
+				...post,
+				...authData,
 			});
+			sessionStorage.setItem("userId",user.attributes.sub );
+			sessionStorage.setItem("username", user.username)
+			console.log(authData);
 		});
 	};
 
@@ -67,35 +73,46 @@ export default function CreatePost({ callback }: IProps) {
 	};
 
 	return (
-		<Form onFinish={handlePost}>
-			<Form.Item
-				label="Title"
-				name="postTitle"
-				{...layout}
-				rules={[
-					{ required: true, message: "Post title cannot be empty" },
-				]}
-			>
-				<Input />
-			</Form.Item>
-			<Form.Item
-				label="New post content"
-				name="postBody"
-				{...layout}
-				rules={[
-					{
-						required: true,
-						message: "New post content cannot be empty",
-					},
-				]}
-			>
-				<TextArea />
-			</Form.Item>
-			<Form.Item {...tailLayout}>
-				<Button htmlType="submit" type="primary">
-					CreatePost
-				</Button>
-			</Form.Item>
-		</Form>
+		<AuthContext.Provider
+			value={{
+				postOwnerId: post.postOwnerId as string,
+				postOwnerUsername: post.postOwnerUsername as string,
+			}}
+		>
+			<Form onFinish={handlePost}>
+				<Form.Item
+					label="Title"
+					name="postTitle"
+					{...layout}
+					rules={[
+						{
+							required: true,
+							message: "Post title cannot be empty",
+						},
+					]}
+				>
+					<Input />
+				</Form.Item>
+				<Form.Item
+					label="New post content"
+					name="postBody"
+					{...layout}
+					rules={[
+						{
+							required: true,
+							message: "New post content cannot be empty",
+						},
+					]}
+				>
+					<TextArea />
+				</Form.Item>
+				<Form.Item {...tailLayout}>
+					<Button htmlType="submit" type="primary">
+						CreatePost
+					</Button>
+				</Form.Item>
+			</Form>
+			}
+		</AuthContext.Provider>
 	);
 }
