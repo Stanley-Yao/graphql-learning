@@ -6,7 +6,7 @@ export type Post = {
 	postBody: String;
 	createdAt?: String;
 	comments?: any[];
-	likes?: Like;
+	likes?: any;
 };
 
 export type Comment = {

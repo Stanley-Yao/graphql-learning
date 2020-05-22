@@ -2,7 +2,7 @@ import * as React from "react";
 import { Post } from "../Modals";
 import { API, graphqlOperation, Auth } from "aws-amplify";
 import { createPost } from "../graphql/mutations";
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, Modal } from "antd";
 import TextArea from "antd/lib/input/TextArea";
 import { AuthContext } from "./Context";
 interface IProps {
@@ -28,7 +28,7 @@ const tailLayout = {
 
 export default function CreatePost({ callback }: IProps) {
 	const [post, setPost] = useState(initPost);
-
+	const [visible, setVisible] = useState(false);
 	useEffect(() => {
 		auth();
 	}, []);
@@ -44,8 +44,8 @@ export default function CreatePost({ callback }: IProps) {
 				...post,
 				...authData,
 			});
-			sessionStorage.setItem("userId",user.attributes.sub );
-			sessionStorage.setItem("username", user.username)
+			sessionStorage.setItem("userId", user.attributes.sub);
+			sessionStorage.setItem("username", user.username);
 			console.log(authData);
 		});
 	};
@@ -66,10 +66,11 @@ export default function CreatePost({ callback }: IProps) {
 		if (callback) {
 			callback();
 		}
+		handleVisible();
 	};
 
-	const handelChange = (e: any) => {
-		setPost({ ...post, [e.target.name]: e.target.value });
+	const handleVisible = () => {
+		setVisible(!visible);
 	};
 
 	return (
@@ -79,40 +80,42 @@ export default function CreatePost({ callback }: IProps) {
 				postOwnerUsername: post.postOwnerUsername as string,
 			}}
 		>
-			<Form onFinish={handlePost}>
-				<Form.Item
-					label="Title"
-					name="postTitle"
-					{...layout}
-					rules={[
-						{
-							required: true,
-							message: "Post title cannot be empty",
-						},
-					]}
-				>
-					<Input />
-				</Form.Item>
-				<Form.Item
-					label="New post content"
-					name="postBody"
-					{...layout}
-					rules={[
-						{
-							required: true,
-							message: "New post content cannot be empty",
-						},
-					]}
-				>
-					<TextArea />
-				</Form.Item>
-				<Form.Item {...tailLayout}>
-					<Button htmlType="submit" type="primary">
-						CreatePost
-					</Button>
-				</Form.Item>
-			</Form>
-			}
+			<Button onClick={handleVisible}> Create Post </Button>
+			<Modal visible={visible} onCancel={handleVisible} footer={null} >
+				<Form onFinish={handlePost}>
+					<Form.Item
+						label="Title"
+						name="postTitle"
+						{...layout}
+						rules={[
+							{
+								required: true,
+								message: "Post title cannot be empty",
+							},
+						]}
+					>
+						<Input />
+					</Form.Item>
+					<Form.Item
+						label="New post content"
+						name="postBody"
+						{...layout}
+						rules={[
+							{
+								required: true,
+								message: "New post content cannot be empty",
+							},
+						]}
+					>
+						<TextArea />
+					</Form.Item>
+					<Form.Item {...tailLayout}>
+						<Button htmlType="submit" type="primary">
+							CreatePost
+						</Button>
+					</Form.Item>
+				</Form>
+			</Modal>
 		</AuthContext.Provider>
 	);
 }

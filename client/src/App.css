@@ -4,3 +4,19 @@
 .App{
   margin: 2rem 2rem 2rem 2rem;
 }
+
+.error{
+  color:red
+}
+
+.blue{
+  color: #1a8baa;
+}
+
+.grey{
+  color: grey;
+}
+
+.pointer{
+  cursor: pointer;
+}

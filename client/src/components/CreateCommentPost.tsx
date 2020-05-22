@@ -21,7 +21,6 @@ const CreateCommentPost: FC<CreateCommentPostProps> = ({ postId }) => {
 
 	const auth = useContext(AuthContext);
 
-
 	const layout = {
 		labelCol: { span: 8 },
 		wrapperCol: { span: 16 },

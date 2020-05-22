@@ -2,7 +2,6 @@ import React from "react";
 import { API, graphqlOperation } from "aws-amplify";
 import { deletePost } from "../graphql/mutations";
 import { Button } from "antd";
-
 interface IProps {
 	post: any;
 }
@@ -16,10 +15,8 @@ export default function DeletePost({ post }: IProps) {
 	};
 
 	return (
-		<div>
-			<Button onClick={() => handelDeletePost(post.id)} type="default">
-				Delete
-			</Button>
-		</div>
+		<Button style={{margin:"2rem"}} onClick={() => handelDeletePost(post.id)} type="default">
+			Delete
+		</Button>
 	);
 }

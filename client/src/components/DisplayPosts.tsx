@@ -2,7 +2,7 @@ import * as React from "react";
 import { listPosts, listComments } from "../graphql/queries";
 import { API, graphqlOperation, APIClass } from "aws-amplify";
 import { Post, Comment } from "../Modals";
-import { deletePost } from "../graphql/mutations";
+import { deletePost, createLike } from "../graphql/mutations";
 import DeletePost from "./DeletePost";
 import EditPost from "./EditPost";
 import { GetPostQuery } from "../API";
@@ -11,17 +11,30 @@ import {
 	onDeletePost,
 	onUpdatePost,
 	onCreateComment,
+	onCreateLike,
 } from "../graphql/subscriptions";
 import { Observable } from "rxjs";
 import CreateCommentPost from "./CreateCommentPost";
 import CommentPost from "./CommentPost";
 import { List } from "antd/lib/form/Form";
+import { FaThumbsUp } from "react-icons/fa";
+import { message, Tooltip, Popover, Typography } from "antd";
+import classnames from "classnames";
+import Title from "antd/lib/skeleton/Title";
 
 interface IProps {}
 const { useEffect, useState } = React;
 
 const DisplayPosts = (props: IProps) => {
 	const [posts, setPosts] = useState([] as Post[]);
+	const [postLikedBy, setPostLikedBy] = useState([] as any);
+	const [error, setError] = useState("");
+	const [hovering, setHovering] = useState(false);
+	const [popoverId, setPopoverId] = useState("");
+
+	const ownerId = sessionStorage.getItem("userId");
+	const username = sessionStorage.getItem("username");
+
 	useEffect(() => {
 		getPost().then((res: any) => {
 			setPosts(res.data.listPosts.items);
@@ -30,6 +43,7 @@ const DisplayPosts = (props: IProps) => {
 		onDeletePostFunc();
 		onEditPostFunc();
 		createPostComment();
+		createPostLike();
 	}, []);
 
 	useEffect(() => {});
@@ -40,6 +54,7 @@ const DisplayPosts = (props: IProps) => {
 			onDeletePostFunc(false);
 			onEditPostFunc(false);
 			createPostComment(false);
+			createPostLike(false);
 		};
 	}, []);
 
@@ -117,6 +132,24 @@ const DisplayPosts = (props: IProps) => {
 		}
 	};
 
+	const createPostLike = async (subscrible = true) => {
+		const createPostLikeListener: any = await API.graphql(
+			graphqlOperation(onCreateLike)
+		);
+		if (subscrible) {
+			createPostLikeListener.subscribe({
+				next: (postData: any) => {
+					getPost().then((res: any) => {
+						setPosts(res.data.listPosts.items);
+					});
+				},
+			});
+		} else {
+			if (typeof createPostLikeListener === "function")
+				createPostLikeListener.unsubscribe();
+		}
+	};
+
 	const getPost = async () => {
 		return await API.graphql(graphqlOperation(listPosts));
 	};
@@ -125,20 +158,103 @@ const DisplayPosts = (props: IProps) => {
 		return await API.graphql(graphqlOperation(listComments));
 	};
 
+	const likedPost = (postId: string) => {
+		for (let post of posts) {
+			if (post.id === postId) {
+				if (post.postOwnerId === ownerId) return true;
+
+				for (let like of post.likes.items) {
+					if (like.likeOwnerId === ownerId) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	};
+
+	const handleLike = async (postId: string) => {
+		if (likedPost(postId)) {
+			return setError("You cannot like post twice");
+		}
+		const input = {
+			numberLikes: 1,
+			likeOwnerId: ownerId,
+			likeOwnerUsername: username,
+			likePostId: postId,
+		};
+
+		try {
+			const result = await API.graphql(
+				graphqlOperation(createLike, { input })
+			);
+			console.log("Liked:", result);
+		} catch (e) {
+			console.log(e.toString());
+			message.error(e.toString());
+		}
+	};
+
+	const handelMouseHover = async (postId: string) => {
+		setHovering(!hovering);
+		let innerLikes = postLikedBy;
+
+		for (let p of posts) {
+			if (p.id === postId) {
+				for (let like of p.likes.items) {
+					innerLikes.push(like.likeOwnerUsername);
+				}
+			}
+			setPostLikedBy(innerLikes);
+		}
+		console.log("post liked by: ", postLikedBy);
+	};
+
+	const onMouseLeave = () => {
+		setHovering(!hovering);
+		setPostLikedBy([]);
+	};
+
+	const { Title, Paragraph, Text } = Typography;
+
 	return (
 		<>
 			{posts.map((p: any) => (
 				<div key={p.id}>
-					<h1>{p.postTitle}</h1>
-					<h3>{p.postBody}</h3>
+					<Typography>
+						<Title>{p.postTitle}</Title>
+						<Paragraph>{p.postBody}</Paragraph>
+					</Typography>
+
 					<span>{`Wrote by ${p.postOwnerUsername}`}</span>
 					<div>
 						{`Create at ${new Date(p.createdAt).toDateString()}`}
 					</div>
 					<br />
+					<p
+						onMouseEnter={() => handelMouseHover(p.id)}
+						onMouseLeave={onMouseLeave}
+					>
+						<Tooltip title={postLikedBy.join(",")}>
+							<FaThumbsUp
+								onClick={(e) => handleLike(p.id)}
+								className={classnames(
+									likedPost(p.id) ? `blue` : `grey`,
+									"pointer"
+								)}
+							/>
+						</Tooltip>
+
+						{p.likes.items.length}
+					</p>
+					{error.length > 0 && <p className="error">{error}</p>}
+
 					<span>
-						<DeletePost post={p} />
-						<EditPost postData={p} id={p.id} />
+						{p.postOwnerId === ownerId && <DeletePost post={p} />}
+						{p.postOwnerId === ownerId && (
+							<EditPost postData={p} id={p.id} />
+						)}
 					</span>
 
 					{p.comments.items.length > 0 && (
